@@ -151,7 +151,7 @@ export const Accordion: React.FC<AccordionProps> = ({ route = '/homepage' }) => 
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
     //apollo querie
-  const { data, loading, error } = useQuery(GET_ACCORDION, {variables:{route, baseUrl}  });
+  const { data, loading, error } = useQuery<Record<string, any>>(GET_ACCORDION, {variables:{route, baseUrl}  });
 
   if (loading) {
     return (

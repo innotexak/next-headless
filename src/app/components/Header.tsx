@@ -39,8 +39,8 @@ export const Header: React.FC<HeaderProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<number | string | null>(null);
 
-  //apollo querie
-const { data, loading, error } = useQuery(GET_HEADER, {
+  //apollo queries
+const { data, loading, error } = useQuery<Record<string, any>>(GET_HEADER, {
   variables: { baseUrl, route: "/homepage" },
 });
 
