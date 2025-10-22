@@ -1,0 +1,6 @@
+schema: https://localhost:4320/graphql
+documents: []
+generates:
+  ./schema.graphql:
+    plugins:
+      - schema-ast

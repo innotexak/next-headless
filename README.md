@@ -34,3 +34,20 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Umbraco GraphQL (headless) integration
+
+This app includes a tiny server-side fetcher for Umbraco GraphQL. To use it on
+the homepage, create a `.env.local` file (or copy `.env.local.example`) and set:
+
+- `UMBRACO_GRAPHQL_URL` — the full URL of your Umbraco GraphQL endpoint (e.g., `https://cms.example.com/graphql`).
+- (optional) `UMBRACO_GRAPHQL_QUERY` — a GraphQL query string to run on the homepage. If omitted, a small sample query is used.
+
+Example query you can paste into `UMBRACO_GRAPHQL_QUERY` (single-line or escaped):
+
+```
+query Sample { settings { title } }
+```
+
+Start the dev server and open the homepage. The page will show the fetched JSON
+or helpful errors when configuration is missing.
