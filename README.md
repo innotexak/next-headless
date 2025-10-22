@@ -51,3 +51,4 @@ query Sample { settings { title } }
 
 Start the dev server and open the homepage. The page will show the fetched JSON
 or helpful errors when configuration is missing.
+# next-headless
