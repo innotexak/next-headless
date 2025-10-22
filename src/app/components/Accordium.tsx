@@ -297,7 +297,7 @@ export const Accordion: React.FC<AccordionProps> = ({ route = '/homepage' }) => 
                       {/* Links/CTAs */}
                       {links.length > 0 && (
                         <div className="flex flex-wrap gap-3 mt-4">
-                          {links.map((link, linkIndex) => {
+                          {links.map((link: { contentProperties: any; }, linkIndex: React.Key | null | undefined) => {
                             const linkData = link.contentProperties;
                             const ctaText = linkData?.cTAText?.value || 'Learn More';
                             const ctaStyle = linkData?.cTAStyle?.value || 'primary';

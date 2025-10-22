@@ -40,34 +40,72 @@ export const Header: React.FC<HeaderProps> = ({
   const [openDropdown, setOpenDropdown] = useState<number | string | null>(null);
 
   //apollo queries
-const { data, loading, error } = useQuery<Record<string, any>>(GET_HEADER, {
-  variables: { baseUrl, route: "/homepage" },
-});
-
-
-
+  const { data, loading, error } = useQuery<Record<string, any>>(GET_HEADER, {
+    variables: { baseUrl, route: "/homepage" },
+  });
 
   const defaultMenu: MenuItem[] = [
     { id: 1, name: "Home", url: "/", children: [] },
   ];
 
   // Extract CMS data
-
   const properties = data?.contentByRoute?.properties || {};  
-  const logoFromCMS =
-    properties?.headerLogo?.mediaItems?.[0]?.url || null; 
+  const logoFromCMS = properties?.headerLogo?.mediaItems?.[0]?.url || null; 
+  const logoMobileFromCMS = properties?.headerLogoMobile?.mediaItems?.[0]?.url || null;
 
-const topNavigation = properties?.toNavigation
-  const menuItemsFromCMS = properties?.mainNavigation?.items?.map((item: any) => ({
-      id: item.id,
-      name: item.name,
-      url: item.url,
-    })) || [];
+  // Extract top navigation from nested structure
+  const topNavigationBlocks = properties?.toNavigation?.blocks || [];
+  const topNavLinks = topNavigationBlocks
+    .map((block: any) => {
+      const contentProps = block?.contentProperties;
+      if (!contentProps) return null;
+
+      const links = contentProps?.cTALinkPicker?.links || [];
+      const text = contentProps?.cTAText?.value || '';
+      const icon = contentProps?.icon?.value || '';
+      const style = contentProps?.cTAStyle?.value || '';
+
+      return links.map((link: any, index: number) => ({
+        id: `${block.id || Math.random()}-${index}`,
+        text: text,
+        url: link.url || '#',
+        type: link.type || '',
+        target: link.target || '_self',
+        icon: icon,
+        style: style,
+      }));
+    })
+    .filter(Boolean)
+    .flat();
+
+  // Extract main navigation
+  const menuItemsFromCMS = properties?.mainNavigation?.items?.map((item: any, index: number) => ({
+    id: item.id || index,
+    name: item.name,
+    url: item.url,
+  })) || [];
 
   const menu = menuItemsFromCMS.length > 0 ? menuItemsFromCMS : (menuItems.length > 0 ? menuItems : defaultMenu);
 
   const toggleDropdown = (itemId: number | string) => {
     setOpenDropdown(openDropdown === itemId ? null : itemId);
+  };
+
+  // Helper to determine icon type and href prefix
+  const getIconData = (text: string, url: string) => {
+    const lowerText = text?.toLowerCase() || '';
+    const lowerUrl = url?.toLowerCase() || '';
+    
+    if (lowerText.includes('phone') || lowerUrl.includes('tel:')) {
+      return { icon: <Phone size={14} />, href: url.startsWith('tel:') ? url : `tel:${url}` };
+    }
+    if (lowerText.includes('email') || lowerText.includes('mail') || lowerUrl.includes('mailto:')) {
+      return { icon: <Mail size={14} />, href: url.startsWith('mailto:') ? url : `mailto:${url}` };
+    }
+    if (lowerText.includes('edit')) {
+      return { icon: <Edit size={14} />, href: url };
+    }
+    return { icon: null, href: url };
   };
 
   return (
@@ -89,36 +127,31 @@ const topNavigation = properties?.toNavigation
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center py-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-4">
-           {topNavigation && Array.isArray(topNavigation.links) && topNavigation.links.length > 0 ? (
-       topNavigation.links.map((link: any) => {
-            const iconData = topNavIcon[link.name?.toLowerCase()]; 
-    return (
-      <a
-        key={link.id}
-        href={`${iconData?.href ?? ""}${link.value ?? ""}`}
-        className="flex items-center gap-1 hover:text-foreground transition-colors"
-      >
-        {iconData?.icon}
-        <span>{link.value || link.name}</span>
-      </a>
-    );
-  })
-) : (
-  <a
-    href="tel:+1234567890"
-    className="flex items-center gap-1 hover:text-foreground transition-colors"
-  >
-    <Phone size={14} />
-    <span>+1 (234) 567-890</span>
-  </a>
-)}
-
+              {topNavLinks && topNavLinks.length > 0 ? (
+                topNavLinks.map((link: any) => {
+                  const iconData = getIconData(link.text, link.url);
+                  return (
+                    <a
+                      key={link.id}
+                      href={iconData.href}
+                      target={link.target}
+                      className="flex items-center gap-1 hover:text-foreground transition-colors"
+                    >
+                      {iconData.icon}
+                      <span>{link.text}</span>
+                    </a>
+                  );
+                })
+              ) : (
+                <a
+                  href="tel:+1234567890"
+                  className="flex items-center gap-1 hover:text-foreground transition-colors"
+                >
+                  <Phone size={14} />
+                  <span>+1 (234) 567-890</span>
+                </a>
+              )}
             </div>
-            {/* <div className="flex items-center gap-3">
-              <a href="#" className="hover:text-foreground transition-colors">Sign In</a>
-              <span>|</span>
-              <a href="#" className="hover:text-foreground transition-colors">Register</a>
-            </div> */}
           </div>
         </div>
       </div>
@@ -129,49 +162,56 @@ const topNavigation = properties?.toNavigation
           {/* Logo */}
           <a href="/" className="text-2xl font-bold text-primary hover:text-primary/80 transition-colors">
             {logoFromCMS ? (
-              <img src={logoFromCMS} alt="Logo" className="h-10 object-contain" />
-            ) : (
-              logo
+              <img 
+                src={logoFromCMS} 
+                alt="Logo" 
+                className="hidden md:block h-10 object-contain" 
+              />
+            ) : null}
+            {logoMobileFromCMS && (
+              <img 
+                src={logoMobileFromCMS} 
+                alt="Logo" 
+                className="md:hidden h-10 object-contain" 
+              />
             )}
+            {!logoFromCMS && !logoMobileFromCMS && logo}
           </a>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-6">
             {menu.map((item: MenuItem) => {
-              
               if(item.name.includes('404') || item.name.includes('search')){
                 return null;  
               }
-          return (
-               <div key={item.id} className="relative group">
-                <a
-                  href={item.url}
-                  className="flex items-center gap-1 text-foreground hover:text-primary transition-colors font-medium py-2"
-                >
-                  {item.name}
-                </a>
+              return (
+                <div key={item.id} className="relative group">
+                  <a
+                    href={item.url}
+                    className="flex items-center gap-1 text-foreground hover:text-primary transition-colors font-medium py-2"
+                  >
+                    {item.name}
+                  </a>
+                </div>
+              );
+            })}
 
-              </div>
-            )})
-        }
-
-          {/* Icons */}
-          <div className="flex items-center gap-4">
-            <button className="hidden md:flex text-foreground hover:text-primary transition-colors" aria-label="Search">
-              <Search size={20} />
-            </button>
-        
-            <button
-              className="lg:hidden text-foreground hover:text-primary transition-colors"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label="Toggle menu"
-            >
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
+            {/* Icons */}
+            <div className="flex items-center gap-4">
+              <button className="hidden md:flex text-foreground hover:text-primary transition-colors" aria-label="Search">
+                <Search size={20} />
+              </button>
+          
+              <button
+                className="lg:hidden text-foreground hover:text-primary transition-colors"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
           </nav>
         </div>
-
       </div>
 
       {/* Mobile Menu */}
@@ -189,14 +229,33 @@ const topNavigation = properties?.toNavigation
             ))}
             {/* Mobile contact info */}
             <div className="pt-4 mt-4 border-t border-border space-y-2 text-sm text-muted-foreground">
-              <a href="tel:+1234567890" className="flex items-center gap-2 hover:text-foreground">
-                <Phone size={16} />
-                <span>+1 (234) 567-890</span>
-              </a>
-              <a href="mailto:info@example.com" className="flex items-center gap-2 hover:text-foreground">
-                <Mail size={16} />
-                <span>info@example.com</span>
-              </a>
+              {topNavLinks && topNavLinks.length > 0 ? (
+                topNavLinks.map((link: any) => {
+                  const iconData = getIconData(link.text, link.url);
+                  return (
+                    <a 
+                      key={link.id}
+                      href={iconData.href} 
+                      target={link.target}
+                      className="flex items-center gap-2 hover:text-foreground"
+                    >
+                      {iconData.icon}
+                      <span>{link.text}</span>
+                    </a>
+                  );
+                })
+              ) : (
+                <>
+                  <a href="tel:+1234567890" className="flex items-center gap-2 hover:text-foreground">
+                    <Phone size={16} />
+                    <span>+1 (234) 567-890</span>
+                  </a>
+                  <a href="mailto:info@example.com" className="flex items-center gap-2 hover:text-foreground">
+                    <Mail size={16} />
+                    <span>info@example.com</span>
+                  </a>
+                </>
+              )}
             </div>
           </nav>
         </div>

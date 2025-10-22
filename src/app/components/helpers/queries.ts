@@ -171,42 +171,74 @@ export const GET_BANNER = gql`
 export const GET_HEADER = gql`
   query GetHeader($baseUrl: String! $route: String!) {
     contentByRoute(route:$route, baseUrl: $baseUrl) {
-      properties {
-        __typename
-        ... on HomePage {
-          headerLogo {
-            mediaItems {
-              url(urlMode: DEFAULT)
-              name
-              id
-            }
-          }
-          headerLogoMobile {
-            mediaItems {
-              url(urlMode: DEFAULT)
-              name
-              id
-            }
-          }
-          mainNavigation {
-            items {
-              name
-              id
-              url(urlMode: DEFAULT)
-            }
-          }
- toNavigation{
-          model
-          links{
-            url(urlMode:DEFAULT)
-            urlSegment
+        properties {
+      __typename
+      ... on HomePage {
+        headerLogo {
+          mediaItems {
+            url(urlMode: ABSOLUTE)
             name
             id
-        		key
           }
         }
+
+        headerLogoMobile {
+          mediaItems {
+            url(urlMode: ABSOLUTE)
+            name
+          }
+        }
+
+        mainNavigation {
+          items {
+            name
+            url(urlMode: RELATIVE)
+          }
+        }
+
+        toNavigation {
+          blocks {
+            contentProperties {
+              ... on Link {
+                cTALinkPicker {
+                  links {
+                    url(urlMode: RELATIVE)
+                    type
+                    target
+                  }
+                }
+                cTAText {
+                  value
+                  model
+                }
+                cTAStyle {
+                  value
+                  model
+                }
+                icon {
+                  value
+                  model
+                }
+                iconPosition {
+                  value
+                  model
+                }
+                overlayPicker {
+                  model
+                  items {
+                    name
+                  }
+                }
+                enableOverlay {
+                  value
+                  model
+                }
+              }
+            }
+          }
         }
       }
+    }
     }
   }
 `;
